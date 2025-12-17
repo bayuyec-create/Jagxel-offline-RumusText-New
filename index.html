@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Mastery: Presentation Mode</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Base Settings */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            color: #1e293b;
+            margin: 0;
+            overflow: hidden; /* Hide body scroll */
+        }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+        /* SCROLL SNAP CONTAINER */
+        .presentation-container {
+            height: 100vh;
+            width: 100vw;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+        .presentation-container::-webkit-scrollbar { display: none; }
+        .presentation-container { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* SLIDE */
+        .slide {
+            height: 100vh;
+            width: 100vw;
+            scroll-snap-align: start;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            overflow: hidden;
+        }
+
+        .slide-content {
+            width: 100%;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 1rem;
+            scrollbar-width: none; 
+        }
+        .slide-content::-webkit-scrollbar { display: none; }
+
+        /* COMPONENTS */
+        .code-block {
+            background-color: #1e293b;
+            color: #e2e8f0;
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            border-left: 4px solid #22c55e;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* SYNTAX HIGHLIGHTING (NEW IMPROVED) */
+        .syntax-func { color: #c084fc; font-weight: bold; } /* Ungu (Nama Rumus) */
+        .syntax-str { color: #fde047; } /* Kuning (Teks) */
+        .syntax-num { color: #60a5fa; } /* Biru (Angka) */
+        .syntax-ref { color: #4ade80; font-style: italic; } /* Hijau (Sel A1) */
+        .syntax-bool { color: #f472b6; font-weight: bold; } /* Pink (TRUE/FALSE) */
+        
+        /* ARGUMENT EXPLANATION PILLS */
+        .arg-pill {
+            display: inline-block;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            margin-right: 4px;
+            border: 1px solid;
+        }
+        .arg-text { background: #fef9c3; color: #854d0e; border-color: #fde047; }
+        .arg-num { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
+        .arg-opt { background: #f3f4f6; color: #4b5563; border-color: #d1d5db; border-style: dashed; }
+
+        .concept-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .concept-card:hover { transform: translateY(-5px); }
+
+        /* NAV DOTS */
+        .nav-dots {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 50;
+        }
+        .dot {
+            width: 12px;
+            height: 12px;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .dot.active {
+            background-color: white;
+            transform: scale(1.3);
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+
+        /* THEMES */
+        .theme-hero { background: linear-gradient(135deg, #064e3b 0%, #065f46 100%); color: white; }
+        .theme-blue { background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); }
+        .theme-indigo { background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%); }
+        .theme-emerald { background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); }
+        .theme-purple { background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); }
+        .theme-pink { background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%); }
+        .theme-dark { background: #0f172a; color: white; }
+    </style>
+</head>
+<body>
+
+    <!-- Nav Dots -->
+    <nav class="nav-dots">
+        <div class="dot active" onclick="scrollToSlide(0)"></div>
+        <div class="dot" onclick="scrollToSlide(1)"></div>
+        <div class="dot" onclick="scrollToSlide(2)"></div>
+        <div class="dot" onclick="scrollToSlide(3)"></div>
+        <div class="dot" onclick="scrollToSlide(4)"></div>
+        <div class="dot" onclick="scrollToSlide(5)"></div>
+        <div class="dot" onclick="scrollToSlide(6)"></div>
+        <div class="dot" onclick="scrollToSlide(7)"></div>
+        <div class="dot" onclick="scrollToSlide(8)"></div>
+    </nav>
+
+    <!-- Floating Arrows -->
+    <div class="fixed bottom-8 right-8 z-50 flex gap-2">
+        <button onclick="scrollDir(-1)" class="bg-black/30 hover:bg-black/50 text-white p-3 rounded-full backdrop-blur transition"><i class="fas fa-chevron-up"></i></button>
+        <button onclick="scrollDir(1)" class="bg-black/30 hover:bg-black/50 text-white p-3 rounded-full backdrop-blur transition"><i class="fas fa-chevron-down"></i></button>
+    </div>
+
+    <main class="presentation-container" id="mainContainer">
+
+        <!-- SLIDE 0: HERO -->
+        <section class="slide theme-hero" id="slide-0">
+            <div class="slide-content text-center flex flex-col justify-center items-center h-full">
+                <div class="inline-flex items-center gap-3 bg-white/10 backdrop-blur px-6 py-2 rounded-full text-sm font-bold mb-8 border border-white/20 tracking-widest uppercase">
+                    <i class="fas fa-chart-line"></i> Jago Excel Training
+                </div>
+                <h1 class="text-5xl md:text-7xl font-extrabold mb-6 leading-tight drop-shadow-lg">
+                    Excel Formula Text <br><span class="text-green-300">Logic & Application</span>
+                </h1>
+                <p class="text-green-50 text-xl md:text-2xl max-w-3xl leading-relaxed font-light mb-12 opacity-90">
+                    Mengubah pola pikir dari "menghafal rumus" menjadi <strong>"memahami logika"</strong>.
+                </p>
+                <div class="animate-bounce mt-10">
+                    <i class="fas fa-chevron-down text-3xl opacity-50"></i>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 1: AGENDA -->
+        <section class="slide theme-dark" id="slide-1">
+            <div class="slide-content flex flex-col justify-center h-full">
+                <div class="grid md:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h2 class="text-5xl font-bold text-white mb-6">Goal Hari Ini</h2>
+                        <p class="text-slate-400 text-xl">Kita akan fokus pada 3 pilar utama efisiensi data.</p>
+                    </div>
+                    <div class="space-y-6">
+                        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 flex items-center gap-6 hover:bg-slate-750 transition transform hover:scale-105">
+                            <div class="bg-blue-600 w-12 h-12 rounded-lg flex items-center justify-center text-white text-xl shadow-lg shadow-blue-500/30">1</div>
+                            <div class="text-xl text-white font-medium">Manipulasi Data Teks <span class="block text-sm text-slate-400 font-normal">Cleaning & Extraction</span></div>
+                        </div>
+                        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 flex items-center gap-6 hover:bg-slate-750 transition transform hover:scale-105">
+                            <div class="bg-emerald-600 w-12 h-12 rounded-lg flex items-center justify-center text-white text-xl shadow-lg shadow-emerald-500/30">2</div>
+                            <div class="text-xl text-white font-medium">Logika Waktu & Tanggal <span class="block text-sm text-slate-400 font-normal">Date Math</span></div>
+                        </div>
+                        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 flex items-center gap-6 hover:bg-slate-750 transition transform hover:scale-105">
+                            <div class="bg-purple-600 w-12 h-12 rounded-lg flex items-center justify-center text-white text-xl shadow-lg shadow-purple-500/30">3</div>
+                            <div class="text-xl text-white font-medium">Visualisasi In-Cell <span class="block text-sm text-slate-400 font-normal">Micro Charts</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 2: TEXT CLEANING (Part 1) -->
+        <section class="slide theme-blue" id="slide-2">
+            <div class="slide-content">
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="bg-blue-600 text-white w-12 h-12 rounded-xl flex items-center justify-center font-bold">1a</div>
+                    <h2 class="text-4xl font-bold text-slate-800">Basic Cleaning Logic</h2>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- TRIM -->
+                    <div class="concept-card p-8 bg-white h-full">
+                        <h3 class="text-2xl font-bold text-blue-700 mb-4">TRIM</h3>
+                        <p class="text-slate-600 mb-4">Menghapus "Spasi Hantu". Excel sangat sensitif terhadap spasi ekstra di awal, akhir, atau spasi ganda.</p>
+                        <div class="code-block mb-4">
+                            <span class="syntax-func">=TRIM</span>(<span class="syntax-ref">A2</span>)
+                        </div>
+                        <div class="bg-slate-100 p-4 rounded text-sm text-slate-600 font-mono">
+                            " Data " &rarr; "Data"<br>
+                            "A   B"  &rarr; "A B"
+                        </div>
+                    </div>
+
+                    <!-- CASES -->
+                    <div class="concept-card p-8 bg-white h-full">
+                        <h3 class="text-2xl font-bold text-blue-700 mb-4">Standardisasi Huruf</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex justify-between mb-1"><span class="font-bold">PROPER</span> <span class="text-xs bg-slate-100 px-2 py-1 rounded">Title Case</span></div>
+                                <div class="code-block py-2 text-sm"><span class="syntax-func">=PROPER</span>(<span class="syntax-str">"jakarta pusat"</span>)</div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between mb-1"><span class="font-bold">UPPER</span> <span class="text-xs bg-slate-100 px-2 py-1 rounded">All Caps</span></div>
+                                <div class="code-block py-2 text-sm"><span class="syntax-func">=UPPER</span>(<span class="syntax-str">"sku-01"</span>)</div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between mb-1"><span class="font-bold">LOWER</span> <span class="text-xs bg-slate-100 px-2 py-1 rounded">All Lower</span></div>
+                                <div class="code-block py-2 text-sm"><span class="syntax-func">=LOWER</span>(<span class="syntax-str">"Email@TEST.com"</span>)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 3: CUTTING LOGIC -->
+        <section class="slide theme-indigo" id="slide-3">
+            <div class="slide-content w-full">
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="bg-indigo-600 text-white w-12 h-12 rounded-xl flex items-center justify-center font-bold">1b</div>
+                    <h2 class="text-4xl font-bold text-slate-800">Logika Potong (Extraction)</h2>
+                </div>
+
+                <div class="space-y-8">
+                    <!-- STATIC CUTTING ROW (Revised for clarity) -->
+                    <div>
+                        <h3 class="text-xl font-bold text-indigo-800 mb-4 flex items-center gap-2"><i class="fas fa-ruler-horizontal"></i> Potong Statis (Fixed Length)</h3>
+                        <div class="grid md:grid-cols-3 gap-4">
+                            <!-- LEFT -->
+                            <div class="bg-white p-5 rounded-xl shadow-sm border border-indigo-100 hover:shadow-md transition">
+                                <div class="flex justify-between items-center mb-2">
+                                    <strong class="text-indigo-600 text-lg">LEFT</strong>
+                                    <span class="text-[10px] bg-indigo-50 text-indigo-400 px-2 py-1 rounded font-mono">Ambil Kiri</span>
+                                </div>
+                                <div class="bg-slate-50 p-2 rounded border border-slate-100 mb-3 font-mono text-xs">
+                                    <span class="syntax-func">=LEFT</span>(<span class="arg-text text-amber-700 border-amber-300">teks</span>, <span class="arg-num text-blue-700 border-blue-300">jml_huruf</span>)
+                                </div>
+                                <ul class="text-[11px] text-slate-500 mb-3 space-y-1 list-disc ml-4">
+                                    <li><span class="font-bold text-amber-600">teks:</span> Sel yang mau dipotong.</li>
+                                    <li><span class="font-bold text-blue-600">jml_huruf:</span> Berapa karakter?</li>
+                                </ul>
+                                <div class="code-block text-xs p-3">
+                                    <span class="syntax-func">=LEFT</span>(<span class="syntax-str">"SBY-01"</span>, <span class="syntax-num">3</span>) <br>
+                                    <span class="text-gray-500 font-bold italic mt-1 block">// Hasil: "SBY"</span>
+                                </div>
+                            </div>
+
+                            <!-- RIGHT -->
+                            <div class="bg-white p-5 rounded-xl shadow-sm border border-indigo-100 hover:shadow-md transition">
+                                <div class="flex justify-between items-center mb-2">
+                                    <strong class="text-indigo-600 text-lg">RIGHT</strong>
+                                    <span class="text-[10px] bg-indigo-50 text-indigo-400 px-2 py-1 rounded font-mono">Ambil Kanan</span>
+                                </div>
+                                <div class="bg-slate-50 p-2 rounded border border-slate-100 mb-3 font-mono text-xs">
+                                    <span class="syntax-func">=RIGHT</span>(<span class="arg-text text-amber-700 border-amber-300">teks</span>, <span class="arg-num text-blue-700 border-blue-300">jml_huruf</span>)
+                                </div>
+                                <ul class="text-[11px] text-slate-500 mb-3 space-y-1 list-disc ml-4">
+                                    <li><span class="font-bold text-amber-600">teks:</span> Sel yang mau dipotong.</li>
+                                    <li><span class="font-bold text-blue-600">jml_huruf:</span> Berapa karakter?</li>
+                                </ul>
+                                <div class="code-block text-xs p-3">
+                                    <span class="syntax-func">=RIGHT</span>(<span class="syntax-str">"SBY-01"</span>, <span class="syntax-num">2</span>) <br>
+                                    <span class="text-gray-500 font-bold italic mt-1 block">// Hasil: "01"</span>
+                                </div>
+                            </div>
+
+                            <!-- MID -->
+                            <div class="bg-white p-5 rounded-xl shadow-sm border border-indigo-100 hover:shadow-md transition">
+                                <div class="flex justify-between items-center mb-2">
+                                    <strong class="text-indigo-600 text-lg">MID</strong>
+                                    <span class="text-[10px] bg-indigo-50 text-indigo-400 px-2 py-1 rounded font-mono">Ambil Tengah</span>
+                                </div>
+                                <div class="bg-slate-50 p-2 rounded border border-slate-100 mb-3 font-mono text-xs">
+                                    <span class="syntax-func">=MID</span>(<span class="arg-text">teks</span>, <span class="arg-num">start</span>, <span class="arg-num">jml</span>)
+                                </div>
+                                <ul class="text-[11px] text-slate-500 mb-3 space-y-1 list-disc ml-4">
+                                    <li><span class="font-bold text-blue-600">start:</span> Mulai huruf keberapa?</li>
+                                    <li><span class="font-bold text-blue-600">jml:</span> Ambil berapa huruf?</li>
+                                </ul>
+                                <div class="code-block text-xs p-3">
+                                    <span class="syntax-func">=MID</span>(<span class="syntax-str">"SBY-01"</span>, <span class="syntax-num">5</span>, <span class="syntax-num">2</span>) <br>
+                                    <span class="text-gray-500 font-bold italic mt-1 block">// Hasil: "01"</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DYNAMIC CUTTING ROW (UPDATED) -->
+                    <div class="bg-white p-6 md:p-8 rounded-2xl shadow-xl border-l-8 border-indigo-500 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 text-indigo-900 text-9xl font-black select-none pointer-events-none">?</div>
+                        
+                        <h3 class="text-2xl font-bold text-indigo-800 mb-4 flex items-center gap-3 relative z-10">
+                            <i class="fas fa-brain text-indigo-500"></i> Logika Dinamis (Dynamic Cut)
+                        </h3>
+                        
+                        <p class="text-slate-600 mb-6 text-lg relative z-10">
+                            Kasus: Mengambil Nama Depan dari "Budi Santoso". Kita tidak bisa pakai angka mati (misal 4), karena nama orang beda-beda panjangnya.
+                        </p>
+
+                        <!-- Step 1: FIND Alone -->
+                        <div class="mb-6 bg-indigo-50 p-4 rounded-xl border border-indigo-100 relative z-10">
+                            <div class="flex justify-between items-start mb-2">
+                                <strong class="text-indigo-800 text-lg"><i class="fas fa-search"></i> Langkah 1: Pahami FIND</strong>
+                            </div>
+                            
+                            <!-- Detailed Syntax Box -->
+                            <div class="bg-white p-4 rounded border border-indigo-200 mb-3 shadow-sm">
+                                <strong class="text-[10px] font-bold text-indigo-400 uppercase tracking-wide mb-2 block border-b border-indigo-100 pb-1">Kamus Syntax: FIND</strong>
+                                <code class="text-sm font-mono text-slate-700 block mb-3">
+                                    <span class="text-purple-700 font-bold">=FIND</span>(<span class="arg-text">"cari_apa"</span>, <span class="arg-text">di_sel_mana</span>, <span class="arg-opt">[mulai_nomor]</span>)
+                                </code>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
+                                    <div class="bg-amber-50 p-2 rounded text-amber-800 border border-amber-100">
+                                        <strong>1. cari_apa:</strong><br>Teks yang dicari (misal spasi " ").
+                                    </div>
+                                    <div class="bg-blue-50 p-2 rounded text-blue-800 border border-blue-100">
+                                        <strong>2. di_sel_mana:</strong><br>Sel referensi (A2).
+                                    </div>
+                                    <div class="bg-slate-50 p-2 rounded text-slate-600 border border-slate-200 border-dashed">
+                                        <strong>3. [mulai_nomor]:</strong><br>Opsional. Start cari dari urutan keberapa.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-4 bg-white p-3 rounded border border-indigo-200">
+                                <div class="font-mono text-sm flex-1 text-slate-700">
+                                    <span class="text-purple-700 font-bold">=FIND</span>(<span class="text-amber-600">" "</span>, <span class="text-amber-600">"Budi Santoso"</span>)
+                                </div>
+                                <div class="text-2xl font-bold text-indigo-600">
+                                    &rarr; 5
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Combine -->
+                        <div class="bg-slate-900 rounded-xl p-6 text-white font-mono text-sm relative z-10 shadow-inner">
+                            <strong class="text-green-400 block mb-3 font-sans text-lg"><i class="fas fa-puzzle-piece"></i> Langkah 2: Masukkan ke LEFT</strong>
+                            
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-2 opacity-50 border-b border-gray-700 pb-2">
+                                    <span><span class="syntax-func">=LEFT</span>(<span class="syntax-str">"Budi Santoso"</span>,</span> <span class="font-bold text-white">5</span> <span>)</span> 
+                                    <span class="text-xs font-sans text-gray-400 ml-auto">// Hasil: "Budi " (Ada spasi)</span>
+                                </div>
+                                
+                                <div class="pt-2">
+                                    <p class="text-xs text-gray-400 font-sans mb-2">Solusi Akhir (Kurangi 1 agar spasi hilang):</p>
+                                    <div class="flex items-center flex-wrap gap-2 text-base md:text-lg font-bold bg-black/30 p-3 rounded">
+                                        <span class="syntax-func">=LEFT</span>(
+                                        <span class="syntax-ref">A2</span>, 
+                                        <span class="text-pink-400 border-b border-pink-400">FIND(" ", A2) - 1</span>
+                                        )
+                                    </div>
+                                    <p class="text-xs text-green-400 font-sans mt-2 text-right">// Hasil: "Budi"</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 4: DATE LOGIC -->
+        <section class="slide theme-emerald" id="slide-4">
+            <div class="slide-content w-full">
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="bg-emerald-600 text-white w-12 h-12 rounded-xl flex items-center justify-center font-bold">2</div>
+                    <h2 class="text-4xl font-bold text-slate-800">The Logic of Time</h2>
+                </div>
+
+                <div class="grid lg:grid-cols-2 gap-10 items-start">
+                    <!-- Left Column: Concept -->
+                    <div class="space-y-6">
+                        <div class="bg-white p-8 rounded-2xl shadow-xl border border-emerald-100">
+                            <h3 class="text-2xl font-bold text-emerald-800 mb-4">Konsep: Tanggal = Angka</h3>
+                            <p class="text-slate-600 text-lg leading-relaxed mb-6">
+                                Di Excel, tanggal hanyalah angka biasa yang diformat. <br>
+                                <strong>1 = 1 Jan 1900</strong>.
+                            </p>
+                            <div class="bg-emerald-50 p-4 rounded-xl text-emerald-900 font-bold text-center border border-emerald-200">
+                                Tgl Akhir - Tgl Awal = Durasi Hari
+                            </div>
+                        </div>
+
+                        <!-- DATE Constructor (Moved here for prominence) -->
+                        <div class="bg-white p-6 rounded-xl shadow-lg border-2 border-emerald-200 transform hover:scale-[1.02] transition">
+                            <div class="flex justify-between items-center mb-3">
+                                <h4 class="font-bold text-emerald-700 text-lg">Menggabungkan (DATE)</h4>
+                                <span class="bg-emerald-100 text-emerald-600 text-[10px] px-2 py-1 rounded font-bold">PENTING</span>
+                            </div>
+                            
+                            <!-- Syntax Box -->
+                            <div class="bg-emerald-50 p-3 rounded-lg border border-emerald-100 mb-3">
+                                <strong class="text-[10px] font-bold text-emerald-500 uppercase tracking-wide mb-1 block">Kamus Syntax</strong>
+                                <code class="text-sm font-mono text-slate-700 block mb-2">
+                                    <span class="syntax-func">=DATE</span>(<span class="arg-num">tahun</span>, <span class="arg-num">bulan</span>, <span class="arg-num">hari</span>)
+                                </code>
+                                <p class="text-xs text-slate-500 italic flex items-center gap-2">
+                                    <i class="fas fa-exclamation-triangle text-amber-500"></i> 
+                                    <span>Hati-hati! Urutannya <strong>Tahun</strong> dulu, bukan Hari.</span>
+                                </p>
+                            </div>
+
+                            <div class="code-block text-xs">
+                                <span class="syntax-func">=DATE</span>(<span class="syntax-num">2023</span>, <span class="syntax-num">12</span>, <span class="syntax-num">25</span>)
+                                <br><span class="text-gray-500 italic">// Hasil: 25/12/2023</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Deconstruction Functions -->
+                    <div class="space-y-4">
+                        <h4 class="text-xl font-bold text-slate-700 mb-2">Memecah Tanggal (Ekstraksi)</h4>
+                        
+                        <!-- DAY -->
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-emerald-50 hover:border-emerald-300 transition group cursor-default">
+                            <div class="flex justify-between items-center mb-2">
+                                <code class="font-mono font-bold text-lg text-slate-700 group-hover:text-emerald-600 transition"><span class="syntax-func">=DAY</span>(<span class="syntax-ref">sel</span>)</code>
+                                <span class="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded border border-slate-200">Output: 1-31</span>
+                            </div>
+                            <p class="text-sm text-slate-500">Mengambil <strong>Tanggal</strong> saja.</p>
+                        </div>
+
+                        <!-- MONTH -->
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-emerald-50 hover:border-emerald-300 transition group cursor-default">
+                            <div class="flex justify-between items-center mb-2">
+                                <code class="font-mono font-bold text-lg text-slate-700 group-hover:text-emerald-600 transition"><span class="syntax-func">=MONTH</span>(<span class="syntax-ref">sel</span>)</code>
+                                <span class="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded border border-slate-200">Output: 1-12</span>
+                            </div>
+                            <p class="text-sm text-slate-500">Mengambil <strong>Bulan</strong> (Angka).</p>
+                        </div>
+
+                        <!-- YEAR -->
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-emerald-50 hover:border-emerald-300 transition group cursor-default">
+                            <div class="flex justify-between items-center mb-2">
+                                <code class="font-mono font-bold text-lg text-slate-700 group-hover:text-emerald-600 transition"><span class="syntax-func">=YEAR</span>(<span class="syntax-ref">sel</span>)</code>
+                                <span class="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded border border-slate-200">Output: 4 Digit</span>
+                            </div>
+                            <p class="text-sm text-slate-500">Mengambil <strong>Tahun</strong> (YYYY).</p>
+                        </div>
+
+                        <!-- Example Combined -->
+                        <div class="mt-4 p-4 bg-emerald-50/50 rounded-xl border border-dashed border-emerald-300">
+                             <p class="text-xs font-bold text-emerald-600 uppercase mb-2">Contoh Kasus: Expired (Tambah 1 Tahun)</p>
+                             <div class="code-block text-[10px] md:text-xs">
+                                 <span class="syntax-func">=DATE</span>(
+                                 <span class="syntax-func">YEAR</span>(<span class="syntax-ref">A1</span>)+<span class="syntax-num">1</span>, 
+                                 <span class="syntax-func">MONTH</span>(<span class="syntax-ref">A1</span>), 
+                                 <span class="syntax-func">DAY</span>(<span class="syntax-ref">A1</span>)
+                                 )
+                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 5: VISUALIZATION -->
+        <section class="slide theme-purple" id="slide-5">
+            <div class="slide-content w-full max-w-4xl">
+                <div class="text-center mb-6">
+                    <span class="bg-purple-100 text-purple-700 px-4 py-1 rounded-full text-sm font-bold uppercase tracking-wide">Modul Interaktif</span>
+                    <h2 class="text-4xl md:text-5xl font-bold text-slate-800 mt-4">In-Cell Visualization</h2>
+                    <p class="text-slate-500 mt-2 text-xl">Membuat grafik mini di dalam sel tanpa fitur Chart yang berat.</p>
+                </div>
+
+                <!-- Syntax Explanation Block (NEW IMPROVED) -->
+                <div class="bg-purple-50 p-6 rounded-xl border border-purple-200 mb-8 max-w-3xl mx-auto text-left shadow-sm">
+                    <strong class="text-xs font-bold text-purple-600 uppercase tracking-wide mb-2 block border-b border-purple-200 pb-1">Kamus Syntax: REPT</strong>
+                    <code class="text-base md:text-lg font-mono text-slate-700 block mb-4 bg-white p-3 rounded border border-purple-100">
+                        <span class="syntax-func">=REPT</span>(<span class="arg-text">"teks"</span>, <span class="arg-num">jumlah</span>)
+                    </code>
+                    <div class="grid md:grid-cols-2 gap-4 text-sm text-slate-600">
+                        <div class="flex gap-3 items-start bg-white p-3 rounded border border-purple-50">
+                            <span class="arg-pill arg-text">"teks"</span>
+                            <p>Simbol/Huruf yang mau diulang.<br><span class="text-xs italic text-slate-400">Contoh: "★" atau "|"</span></p>
+                        </div>
+                        <div class="flex gap-3 items-start bg-white p-3 rounded border border-purple-50">
+                            <span class="arg-pill arg-num">jumlah</span>
+                            <p>Berapa kali diulang?<br><span class="text-xs italic text-slate-400">Contoh: 5 (atau rumus A1/10)</span></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8">
+                    <!-- Interactive Star Rating -->
+                    <div class="bg-white p-8 rounded-2xl shadow-xl border border-purple-100">
+                        <h3 class="font-bold text-slate-700 mb-4 text-xl">1. Star Rating System</h3>
+                        <div class="text-6xl text-amber-400 mb-6 font-sans text-center transition-all duration-300" id="rept-stars">★★★☆☆</div>
+                        
+                        <label class="block text-sm font-bold text-slate-400 mb-2">Geser Nilai:</label>
+                        <input type="range" id="rept-slider" min="1" max="5" value="3" class="w-full h-3 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-purple-600 mb-6">
+                        
+                        <div class="bg-slate-50 p-4 rounded-lg border text-left">
+                            <div class="text-xs text-slate-400 mb-1">Rumus Dinamis:</div>
+                            <code class="text-sm text-purple-600 font-mono font-bold">
+                                <span class="text-purple-700">=REPT</span>(<span class="text-amber-600">"★"</span>, <span id="val-rept" class="text-blue-600">3</span>) & 
+                                <span class="text-purple-700">REPT</span>(<span class="text-amber-600">"☆"</span>, <span id="val-rept-rem" class="text-blue-600">2</span>)
+                            </code>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Bar Chart -->
+                    <div class="bg-white p-8 rounded-2xl shadow-xl border border-purple-100">
+                        <h3 class="font-bold text-slate-700 mb-4 text-xl">2. Simple Bar Chart</h3>
+                        <div class="flex items-center gap-4 mb-6">
+                            <label class="text-sm font-bold text-slate-500">Input Data:</label>
+                            <input type="number" id="input-bar" value="80" class="w-24 p-2 border-2 border-purple-200 rounded-lg text-center font-bold text-lg focus:border-purple-500 outline-none">
+                        </div>
+                        <div class="bg-slate-100 h-16 flex items-center px-4 rounded-xl border mb-6 overflow-hidden relative">
+                            <span id="rept-bar" class="text-blue-600 font-black tracking-tighter text-3xl transition-all duration-300">||||||||</span>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-lg border">
+                            <div class="text-xs text-slate-400 mb-1">Logika:</div>
+                            <code class="text-sm text-blue-600 font-mono font-bold">
+                                <span class="text-purple-700">=REPT</span>(<span class="text-amber-600">"|"</span>, <span class="text-slate-600">A1</span>/<span class="text-blue-600">10</span>)
+                            </code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 6: SUBSTITUTE (NEW IMPROVED) -->
+        <section class="slide theme-pink" id="slide-6">
+            <div class="slide-content w-full max-w-4xl">
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="bg-pink-600 text-white w-12 h-12 rounded-xl flex items-center justify-center font-bold">3</div>
+                    <h2 class="text-4xl font-bold text-slate-800">Teknik Substitusi (Ganti Teks)</h2>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-8 mb-6">
+                    <!-- Definition Card -->
+                    <div class="bg-white p-8 rounded-2xl shadow-lg border border-pink-100 flex flex-col">
+                        <h3 class="text-2xl font-bold text-pink-600 mb-4">SUBSTITUTE</h3>
+                        <p class="text-slate-600 mb-4 leading-relaxed">
+                            Mengganti teks lama dengan teks baru. Sangat berguna untuk membersihkan karakter "sampah".
+                        </p>
+                        
+                        <!-- NEW SYNTAX BOX -->
+                        <div class="bg-pink-50 p-4 rounded-lg border border-pink-200 mt-auto">
+                            <strong class="text-xs font-bold text-pink-500 uppercase tracking-wide mb-2 block border-b border-pink-200 pb-1">Kamus Syntax</strong>
+                            <code class="text-sm font-mono text-slate-700 block mb-3 break-all">
+                                <span class="syntax-func">=SUBSTITUTE</span>(<span class="arg-text">teks</span>, <span class="arg-text">lama</span>, <span class="arg-text">baru</span>, <span class="arg-opt">[ke_brp]</span>)
+                            </code>
+                            <div class="space-y-2 text-xs">
+                                <div class="flex gap-2"><span class="arg-pill arg-text min-w-[50px] text-center">teks</span> <span>Sel awal (A2).</span></div>
+                                <div class="flex gap-2"><span class="arg-pill arg-text min-w-[50px] text-center">lama</span> <span>Teks yg mau dibuang (misal "-").</span></div>
+                                <div class="flex gap-2"><span class="arg-pill arg-text min-w-[50px] text-center">baru</span> <span>Teks pengganti (misal "").</span></div>
+                                <div class="flex gap-2"><span class="arg-pill arg-opt min-w-[50px] text-center">ke_brp</span> <span>(Opsional) Urutan keberapa?</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Case Study Card -->
+                    <div class="bg-white p-8 rounded-2xl shadow-lg border border-pink-100 flex flex-col justify-center">
+                        <strong class="text-xs uppercase text-slate-400 tracking-wider font-bold block mb-4">Studi Kasus 1: Standardisasi No HP</strong>
+                        
+                        <div class="space-y-4">
+                            <!-- Input -->
+                            <div class="flex items-center gap-4 p-3 bg-red-50 rounded-lg border border-red-100">
+                                <div class="w-10 h-10 rounded bg-white text-red-500 flex items-center justify-center font-bold text-xs shadow-sm">IN</div>
+                                <span class="font-mono text-lg text-slate-600">0812-3456-7890</span>
+                            </div>
+
+                            <!-- Process -->
+                            <div class="code-block text-sm p-4 text-center">
+                                <span class="syntax-func">=SUBSTITUTE</span>(<span class="syntax-ref">A2</span>, <span class="syntax-str">"-"</span>, <span class="syntax-str">""</span>)
+                                <div class="text-xs text-gray-500 mt-1 italic">// Instance Num kosong = Hapus semua strip</div>
+                            </div>
+
+                            <!-- Output -->
+                            <div class="flex items-center gap-4 p-3 bg-green-50 rounded-lg border border-green-100">
+                                <div class="w-10 h-10 rounded bg-white text-green-500 flex items-center justify-center font-bold text-xs shadow-sm">OUT</div>
+                                <span class="font-mono text-lg font-bold text-green-700">081234567890</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Advanced: Instance Num Explanation -->
+                <div class="bg-white p-6 rounded-xl border border-pink-200 shadow-sm relative overflow-hidden">
+                    <div class="absolute -right-4 -top-4 bg-pink-100 w-24 h-24 rounded-full opacity-50 blur-xl"></div>
+                    
+                    <h4 class="font-bold text-pink-700 mb-3 flex items-center gap-2 relative z-10">
+                        <i class="fas fa-crosshairs"></i> Fitur Rahasia: [ke_brp]
+                    </h4>
+                    <p class="text-sm text-slate-600 mb-4 relative z-10 max-w-2xl">
+                        Bagaimana jika kita hanya ingin mengganti karakter tertentu saja? Misalnya mengganti tanda strip <strong>kedua</strong> menjadi tanda tambah, tapi biarkan strip pertama.
+                    </p>
+                    
+                    <div class="grid md:grid-cols-2 gap-4 text-sm font-mono relative z-10">
+                         <div class="bg-slate-50 p-4 rounded border border-slate-200">
+                             <div class="text-slate-400 text-xs font-sans font-bold mb-1 uppercase">Teks Awal</div>
+                             <div class="text-lg">"Kopi-Susu-Gula"</div>
+                         </div>
+                         <div class="bg-pink-50 p-4 rounded border border-pink-200">
+                             <div class="text-pink-400 text-xs font-sans font-bold mb-1 uppercase">Rumus (Ganti strip ke-2)</div>
+                             <div class="text-slate-700 mb-2">
+                                 <span class="text-purple-700 font-bold">=SUBSTITUTE</span>(A1, <span class="text-amber-600">"-"</span>, <span class="text-green-600">"+"</span>, <strong class="bg-pink-600 text-white px-1.5 rounded text-sm">2</strong>)
+                             </div>
+                             <div class="text-green-600 font-bold bg-white/80 p-2 rounded border border-green-100">
+                                 Hasil: "Kopi-Susu<span class="text-red-500 font-black text-lg">+</span>Gula"
+                             </div>
+                         </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 7: JOINING TEXT (NEW IMPROVED) -->
+        <section class="slide theme-blue" id="slide-7">
+            <div class="slide-content w-full max-w-5xl">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="bg-pink-600 text-white w-12 h-12 rounded-xl flex items-center justify-center font-bold">4</div>
+                    <h2 class="text-4xl font-bold text-slate-800">Evolusi Penggabungan</h2>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-6">
+                    
+                    <!-- 1. JADUL: Ampersand & CONCATENATE -->
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 opacity-80 hover:opacity-100 transition shadow-sm">
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="font-bold text-slate-600 text-lg">1. Klasik (Manual)</h4>
+                            <span class="bg-slate-200 text-slate-600 text-[10px] px-2 py-1 rounded font-bold">JADUL</span>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <p class="text-xs font-bold text-slate-500 mb-1">Ampersand (&)</p>
+                                <div class="code-block text-xs">
+                                    <span class="syntax-ref">A1</span> & <span class="syntax-str">" "</span> & <span class="syntax-ref">B1</span>
+                                </div>
+                            </div>
+                            <!-- CONCATENATE RESTORED HERE -->
+                            <div>
+                                <p class="text-xs font-bold text-slate-500 mb-1">CONCATENATE</p>
+                                <div class="code-block text-xs">
+                                    <span class="syntax-func">=CONCATENATE</span>(<span class="syntax-ref">A1</span>, <span class="syntax-str">" "</span>, <span class="syntax-ref">B1</span>)
+                                </div>
+                            </div>
+                            <p class="text-[10px] text-slate-400 italic mt-1 border-t pt-2">
+                                <i class="fas fa-times-circle text-red-400"></i> Ribet. Tidak bisa blok range (A1:A5), harus pilih satu-satu.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- 2. TRANSISI: CONCAT -->
+                    <div class="bg-white p-5 rounded-xl border border-blue-200 hover:border-blue-400 transition shadow-sm">
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="font-bold text-blue-700 text-lg">2. CONCAT</h4>
+                            <span class="bg-blue-100 text-blue-600 text-[10px] px-2 py-1 rounded font-bold">2019+</span>
+                        </div>
+                        <div class="code-block text-xs mb-3">
+                            <span class="syntax-func">=CONCAT</span>(<span class="syntax-ref">A1:A5</span>)
+                        </div>
+                        <div class="bg-amber-50 p-3 rounded border border-amber-100 text-xs text-amber-800 italic flex items-start gap-2">
+                            <i class="fas fa-exclamation-triangle mt-0.5"></i> 
+                            <span><strong>Kelemahan:</strong> Tidak punya fitur "Pemisah". Hasilnya akan menempel semua (BudiAndiSiti).</span>
+                        </div>
+                    </div>
+
+                    <!-- 3. JUARA: TEXTJOIN (Full Width + Detailed Syntax) -->
+                    <div class="md:col-span-2 bg-white p-6 rounded-xl border-2 border-indigo-200 shadow-lg transform hover:scale-[1.01] transition relative overflow-hidden">
+                        <div class="absolute right-0 top-0 bg-indigo-50 w-32 h-32 rounded-bl-full -mr-8 -mt-8 opacity-50"></div>
+                        
+                        <div class="flex justify-between items-center mb-4 relative z-10">
+                            <h4 class="font-bold text-indigo-700 text-xl flex items-center gap-2">
+                                <span class="bg-indigo-600 text-white w-8 h-8 rounded-lg flex items-center justify-center text-sm"><i class="fas fa-crown"></i></span>
+                                3. TEXTJOIN
+                            </h4>
+                            <span class="bg-indigo-600 text-white text-xs px-3 py-1 rounded-full font-bold tracking-wide">WINNER</span>
+                        </div>
+                        
+                        <!-- NEW SYNTAX BREAKDOWN -->
+                        <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100 mb-4 relative z-10">
+                             <strong class="text-xs font-bold text-indigo-500 uppercase tracking-wide mb-2 block border-b border-indigo-200 pb-1">Kamus Syntax</strong>
+                             <code class="text-sm font-mono text-slate-700 block mb-3">
+                                 <span class="syntax-func">=TEXTJOIN</span>(<span class="arg-text">pemisah</span>, <span class="arg-bool bg-pink-100 text-pink-700 border-pink-200 border px-1 rounded">abaikan_kosong</span>, <span class="arg-text">range</span>)
+                             </code>
+                             <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                                 <div class="bg-white p-2 rounded shadow-sm">
+                                     <strong class="text-amber-600 block mb-1">1. pemisah</strong>
+                                     Karakter pemisah (misal ", " atau spasi).
+                                 </div>
+                                 <div class="bg-white p-2 rounded shadow-sm">
+                                     <strong class="text-pink-600 block mb-1">2. abaikan_kosong</strong>
+                                     <code class="font-bold">TRUE</code> = Lompat sel kosong.<br>
+                                     <code class="font-bold">FALSE</code> = Tulis sel kosong.
+                                 </div>
+                                 <div class="bg-white p-2 rounded shadow-sm">
+                                     <strong class="text-green-600 block mb-1">3. range</strong>
+                                     Blok data (A1:A10).
+                                 </div>
+                             </div>
+                        </div>
+
+                        <div class="code-block text-sm mb-2 shadow-md border-indigo-500/30 relative z-10">
+                            <span class="syntax-func">=TEXTJOIN</span>(<span class="syntax-str">", "</span>, <span class="syntax-bool">TRUE</span>, <span class="syntax-ref">A1:A10</span>)
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 8: END -->
+        <section class="slide theme-dark" id="slide-8">
+            <div class="slide-content text-center">
+                <div class="text-6xl mb-8 animate-pulse">💡</div>
+                <h2 class="text-5xl font-bold text-white mb-6">Terima Kasih</h2>
+                <p class="text-2xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
+                    "Tools are only as good as the logic behind them."
+                </p>
+                <div class="mt-12 p-6 border border-slate-700 rounded-xl inline-block bg-slate-800">
+                    <p class="text-slate-300 font-mono text-sm mb-2">Next Steps:</p>
+                    <div class="flex gap-4">
+                        <a href="https://docs.google.com/spreadsheets/d/141UoBVMJGIuJbRJXyBFjURHFqTPKvi6R/export" target="_blank" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-bold transition cursor-pointer flex items-center gap-2">
+                            <i class="fas fa-file-excel"></i> Latihan Soal
+                        </a>
+                        
+                        <button onclick="scrollToSlide(0)" class="bg-slate-700 hover:bg-slate-600 text-white px-6 py-2 rounded-lg font-bold transition">Ulangi Presentasi</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // 1. INTERACTIVE REPT LOGIC
+        const starSlider = document.getElementById('rept-slider');
+        const starsDisplay = document.getElementById('rept-stars');
+        const valRept = document.getElementById('val-rept');
+        const valReptRem = document.getElementById('val-rept-rem');
+
+        if (starSlider) {
+            starSlider.addEventListener('input', function() {
+                const val = parseInt(this.value);
+                const filled = "★".repeat(val);
+                const empty = "☆".repeat(5 - val);
+                
+                starsDisplay.textContent = filled + empty;
+                valRept.textContent = val;
+                valReptRem.textContent = 5 - val;
+            });
+        }
+
+        const barInput = document.getElementById('input-bar');
+        const barDisplay = document.getElementById('rept-bar');
+
+        if (barInput) {
+            barInput.addEventListener('input', function() {
+                let val = parseInt(this.value);
+                if (isNaN(val)) val = 0;
+                const count = Math.floor(val / 10);
+                barDisplay.textContent = "|".repeat(count);
+            });
+        }
+
+        // 2. SCROLL / SLIDE LOGIC
+        const container = document.getElementById('mainContainer');
+        const dots = document.querySelectorAll('.dot');
+        const slides = document.querySelectorAll('.slide');
+
+        // Update active dot on scroll
+        container.addEventListener('scroll', () => {
+            const scrollPos = container.scrollTop;
+            const windowHeight = window.innerHeight;
+            
+            // Calculate current slide index based on scroll position
+            const currentIndex = Math.round(scrollPos / windowHeight);
+            
+            dots.forEach((dot, index) => {
+                if (index === currentIndex) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
+            });
+        });
+
+        // Navigation Functions
+        function scrollToSlide(index) {
+            const targetSlide = document.getElementById(`slide-${index}`);
+            if (targetSlide) {
+                targetSlide.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function scrollDir(direction) {
+            const height = window.innerHeight;
+            container.scrollBy({ top: height * direction, behavior: 'smooth' });
+        }
+
+        // Keyboard Navigation (Up/Down Arrow)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+                scrollDir(1);
+            } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+                scrollDir(-1);
+            }
+        });
+    </script>
+</body>
+</html>
